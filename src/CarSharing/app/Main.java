@@ -1,15 +1,9 @@
 package CarSharing.app;
 
 import CarSharing.entities.*;
-import CarSharing.provided.Car;
-import CarSharing.provided.Customer;
-import CarSharing.provided.DateTime;
-import CarSharing.provided.DurationComparator;
+import CarSharing.provided.*;
 import CarSharing.provided.Formatter;
-import CarSharing.provided.Location;
-import CarSharing.provided.LongFormat;
-import CarSharing.provided.Matcher;
-import CarSharing.util.AmountCopmarator;
+import CarSharing.util.AmountComparator;
 import CarSharing.util.QuickFormat;
 import CarSharing.util.StatusComparator;
 import CarSharing.util.StatusMatcher;
@@ -17,10 +11,7 @@ import CarSharing.util.StatusMatcher;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * A demo app.
@@ -116,9 +107,67 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
+		// 1. Print the trips in tabular long format
+		tabularPrint(trips, new LongFormat());
+
+		// 2. Sort the trips
+		try {
+			trips.sort(new StatusComparator());
+		} catch (NullPointerException e) {
+			System.err.println("NullPointerException: Some trips might have null status.");
+		}
+
+		// 3. Print the trips in tabular long format again
+		tabularPrint(trips, new LongFormat());
+
+		// 4. Sort the trips by amount charged
+		trips.sort(new AmountComparator());
+
+		// 5. Print the trips in tabular quick format
+		tabularPrint(trips, new QuickFormat());
+
+		// 6. Filter the trips by status, keeping only completed trips
+		List<Trip> completedTrips = filter(trips, new StatusMatcher(TripStatus.COMPLETED));
+
+		// 7. Print the completed trips in tabular long format
+		tabularPrint(completedTrips, new LongFormat());
+
+		// 8. Sort the filtered trips by duration
+		completedTrips.sort(new DurationComparator());
+
+		// 9. Export the filtered and sorted trips to file "completed_trips.txt"
+		export(completedTrips, "completed_trips.txt");
+
+		// 10. Print the number of trips exported
+		System.out.printf("Number of trips exported: %d\n", completedTrips.size());
+
+		// 11. Provoke and handle an exception
+		provokeException();
 	}
 
+	public static int export(List<Trip> trips, String fileName) {
+		int counter = 0;
+		try(BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))){
+			for(Trip trip : trips){
+				bw.write(trip.toString());
+				bw.newLine();
+				counter++;
+			}
+		}
+		catch (Exception e){
+			System.err.println(e.getMessage());
+		}
+		return counter;
+	}
+
+	public static List<Trip> filter(List<Trip> trips, Matcher<Trip> matcher) {
+		List<Trip> filtered = new LinkedList<>();
+		for(Trip trip : trips){
+			if(matcher.matches(trip))
+				filtered.add(trip);
+		}
+		return filtered;
+	}
 	
 	private static void tabularPrint(List<Trip> trips) {
 		System.out.printf("---\n");
@@ -127,5 +176,19 @@ public class Main {
 		}
 		System.out.printf("---\n");
 	}
-
+	private static void tabularPrint(List<Trip> trips, Formatter formatter) {
+		System.out.println("---");
+		for (Trip t : trips) {
+			System.out.println(formatter.format(t));
+		}
+		System.out.println("---");
+	}
+	private static void provokeException() {
+		try {
+			Trip invalidTrip = trips.get(0);
+			invalidTrip.end(null, null, -1);
+		} catch (IllegalArgumentException e) {
+			System.err.println("Exception handled: " + e.getMessage());
+		}
+	}
 }
