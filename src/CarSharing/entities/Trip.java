@@ -43,15 +43,18 @@ public class Trip implements Comparable<Trip> {
 		if(car == null){
 			throw new IllegalArgumentException("Car cannot be null");
 		}
+		else
+			this.car = car;
 		if(customer == null){
 			throw new IllegalArgumentException("Customer cannot be null");
 		}
+		else
+			this.customer = customer;
 		if(rate == null){
 			throw new IllegalArgumentException("Rate cannot be null");
 		}
-		this.car = car;
-		this.customer = customer;
-		this.rate = rate;
+		else
+			this.rate = rate;
 	}
 	public Trip(Car car, Customer customer, Rate rate, Location startLocation, DateTime startTime){
 		this(car, customer, rate);
